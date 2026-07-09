@@ -1,22 +1,109 @@
-# Soroban Project
+# 🚀 Stellar Escrow dApp
 
-## Project Structure
+A decentralized Escrow application built on the Stellar Soroban Smart Contract platform using React + TypeScript.
 
-This repository uses the recommended structure for a Soroban project:
+## 📌 Overview
 
-```text
-.
-├── contracts
-│   └── hello_world
-│       ├── src
-│       │   ├── lib.rs
-│       │   └── test.rs
-│       └── Cargo.toml
-├── Cargo.toml
-└── README.md
+Stellar Escrow is a simple decentralized application where:
+
+- Buyer locks funds into an escrow.
+- Seller receives payment only after buyer releases it.
+- Escrow status can be viewed on-chain.
+
+This project demonstrates frontend integration with a Soroban smart contract deployed on Stellar Testnet.
+
+---
+
+## ✨ Features
+
+- 🔐 Freighter Wallet Integration
+- 📄 Create Escrow
+- 📖 Read Escrow Details
+- 💰 Amount stored on-chain
+- 📊 Transaction Status Tracking
+- ⚡ Stellar Soroban Smart Contract
+- 🧾 Real-time contract interaction
+
+---
+
+## 🛠 Tech Stack
+
+- React
+- TypeScript
+- Vite
+- Stellar SDK
+- Soroban SDK (Rust)
+- Freighter Wallet
+
+---
+
+## 📂 Project Structure
+
+```
+src/
+contracts/
+public/
 ```
 
-- New Soroban contracts can be put in `contracts`, each in their own directory. There is already a `hello_world` contract in there to get you started.
-- If you initialized this project with any other example contracts via `--with-example`, those contracts will be in the `contracts` directory as well.
-- Contracts should have their own `Cargo.toml` files that rely on the top-level `Cargo.toml` workspace for their dependencies.
-- Frontend libraries can be added to the top-level directory as well. If you initialized this project with a frontend template via `--frontend-template` you will have those files already included.
+---
+
+## ⚙️ Installation
+
+Clone the repository
+
+```bash
+git clone https://github.com/ayeadiii08/stellar-escrow.git
+```
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Run locally
+
+```bash
+npm run dev
+```
+
+---
+
+## 📸 Screenshots
+
+Coming Soon
+
+---
+
+## 🌐 Smart Contract
+
+Contract Address
+
+```
+ADD_YOUR_CONTRACT_ADDRESS
+```
+
+---
+
+## 🔗 Sample Transaction
+
+Transaction Hash
+
+```
+4226c0974bde6cd0cd821239149dd4de6c89db46cac0666534b56206b116278c
+```
+
+---
+
+## 👨‍💻 Author
+
+Aditya Verma
+
+GitHub:
+https://github.com/ayeadiii08
+
+---
+
+## 📄 License
+
+MIT
