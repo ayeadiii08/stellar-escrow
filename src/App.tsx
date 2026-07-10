@@ -52,10 +52,17 @@ function App() {
   const [wallet, setWallet] = useState("");
   const [receiver, setReceiver] = useState("");
   const [amount, setAmount] = useState("");
-  const [details, setDetails] = useState<string | null>(null);
+ const [details, setDetails] = useState<{
+  sender: string;
+  receiver: string;
+  amount: string;
+  status: string;
+} | null>(null);
+
+const [txStatus, setTxStatus] = useState("");
 
   // ----------------------------
-  // Connect Wallet
+  // Connect Wallet 
   // ----------------------------
 
   const connectWallet = async () => {
@@ -82,7 +89,7 @@ function App() {
         return;
       }
 
-      setDetails("Loading escrow details...");
+     setDetails(null);
 
       const server = new rpc.Server(RPC_URL);
 
@@ -108,54 +115,57 @@ function App() {
       const values = getSimulationValues(simulation);
 
       if (!values) {
-        setDetails("No escrow found.");
+        alert("No escrow found.");
+setDetails(null);
         return;
       }
 
       console.log("Decoded Values:", values);
 
-     values.forEach((v, i) => {
-  console.log("==========");
-  console.log("INDEX:", i);
+  let sender = "";
+let receiverAddress = "";
+let escrowAmount = "";
+let status = "";
 
+values.forEach((v, i) => {
   const arm =
     typeof (v as { arm?: () => string }).arm === "function"
       ? (v as { arm: () => string }).arm()
       : "unknown";
 
-  console.log("ARM:", arm);
-
- if (arm === "address") {
-  const bytes = (
-    v as {
-      value: () => {
+  if (arm === "address") {
+    const bytes = (
+      v as {
         value: () => {
-          value: () => Uint8Array;
+          value: () => {
+            value: () => Uint8Array;
+          };
         };
-      };
-    }
-  )
-    .value()
-    .value()
-    .value();
+      }
+    )
+      .value()
+      .value()
+      .value();
 
-  const address = StrKey.encodeEd25519PublicKey(bytes);
+    const address = StrKey.encodeEd25519PublicKey(bytes);
 
-  console.log("ADDRESS:", address);
-}
+    if (i === 0) sender = address;
+    if (i === 1) receiverAddress = address;
+  }
+
   if (arm === "i128") {
-  const val = (
-    v as {
-      value: () => {
-        hi: () => unknown;
-        lo: () => unknown;
-      };
-    }
-  ).value();
+    const val = (
+      v as {
+        value: () => {
+          hi: () => { toBigInt: () => bigint };
+          lo: () => { toBigInt: () => bigint };
+        };
+      }
+    ).value();
 
-  console.log("HI =", val.hi());
-  console.log("LO =", val.lo());
-}
+    escrowAmount = val.lo().toBigInt().toString();
+  }
+
   if (arm === "sym") {
     const bytes = (
       v as {
@@ -163,17 +173,21 @@ function App() {
       }
     ).value();
 
-    console.log(
-      "STATUS:",
-      new TextDecoder().decode(bytes)
-    );
+    status = new TextDecoder().decode(bytes);
   }
 });
-      setDetails(JSON.stringify(values, null, 2));
+
+setDetails({
+  sender,
+  receiver: receiverAddress,
+  amount: escrowAmount,
+  status,
+});
 
     } catch (err) {
       console.error(err);
-      setDetails("Failed to fetch escrow.");
+      alert("Failed to fetch escrow.");
+setDetails(null);
     }
   };
 
@@ -184,6 +198,8 @@ function App() {
   const lockFunds = async () => {
         console.log("Receiver value:", receiver);
     console.log("Amount value:", amount);
+
+    setTxStatus("⏳ Waiting for wallet confirmation...");
 
     try {
       if (!wallet) {
@@ -206,6 +222,7 @@ function App() {
         receiver,
         amount,
       });
+
 
       const server = new rpc.Server(RPC_URL);
 
@@ -237,8 +254,7 @@ function App() {
         await signTransaction(prepared.toXDR(), {
           networkPassphrase: NETWORK_PASSPHRASE,
         });
-
-      console.log("SIGNED OBJECT:", signed);
+        setTxStatus("📤 Transaction Submitted...");
 
       const finalTx =
         TransactionBuilder.fromXDR(
@@ -248,6 +264,7 @@ function App() {
 
       const response =
         await server.sendTransaction(finalTx);
+        setTxStatus("⌛ Transaction Pending...");
 
       console.log("SEND RESPONSE:", response);
 
@@ -264,15 +281,18 @@ function App() {
 
         if (txResponse.status === "SUCCESS") {
           alert("Escrow Created ✅");
+          setTxStatus("✅ Escrow Created Successfully!");
         } else {
           console.error(txResponse);
           alert("Transaction Failed");
         }
       } else {
+        setTxStatus("❌ Transaction Failed");
         console.error(response);
         alert("Send Failed");
       }
     } catch (err) {
+      setTxStatus("❌ Transaction Failed");
       console.error(err);
       alert("Transaction Failed");
     }
@@ -331,15 +351,54 @@ function App() {
           📄 Get Escrow Details
         </button>
 
+        {txStatus && (
+  <div className="mt-4 bg-slate-700 rounded-lg p-4">
+    <h2 className="text-white font-bold">
+      Transaction Status
+    </h2>
+
+    <p className="text-cyan-300 mt-2">
+      {txStatus}
+    </p>
+  </div>
+)}
+
         {details && (
           <div className="mt-6 bg-slate-700 rounded-lg p-4">
             <h2 className="text-white font-bold mb-2">
               Escrow Details
             </h2>
+<div className="text-white text-sm space-y-3">
 
-            <pre className="text-green-300 whitespace-pre-wrap break-all text-sm">
-              {details}
-            </pre>
+  <div>
+    <strong>Sender:</strong>
+    <p className="break-all text-cyan-300">
+      {details.sender}
+    </p>
+  </div>
+
+  <div>
+    <strong>Receiver:</strong>
+    <p className="break-all text-cyan-300">
+      {details.receiver}
+    </p>
+  </div>
+
+  <div>
+    <strong>Amount:</strong>
+    <p className="text-yellow-300">
+      {details.amount} XLM
+    </p>
+  </div>
+
+  <div>
+    <strong>Status:</strong>
+    <p className="text-green-400 font-bold">
+      {details.status}
+    </p>
+  </div>
+
+</div>
           </div>
         )}
       </div>
